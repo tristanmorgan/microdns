@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"github.com/miekg/dns"
 	"log"
 	"net"
 	"os"
@@ -13,10 +14,9 @@ import (
 	"strings"
 	"syscall"
 	"time"
-	"github.com/miekg/dns"
 )
 
-var ipv4, ipv6, conf string
+var ipv4, ipv6, conf, port string
 var ttl int
 var logflag bool
 var mapv4 map[string]string
@@ -26,6 +26,7 @@ func main() {
 	flag.StringVar(&ipv4, "ipv4", "127.0.0.1", "IPv4 Address")
 	flag.StringVar(&ipv6, "ipv6", "::1", "IPv6 Address")
 	flag.IntVar(&ttl, "ttl", 86400, "Time to live")
+	flag.StringVar(&port, "port", ":8600", "listen port")
 	flag.BoolVar(&logflag, "log", false, "Log requests to stdout")
 	flag.StringVar(&conf, "conf", "/home/dns.conf", "Config File")
 	flag.Parse()
@@ -33,6 +34,7 @@ func main() {
 	fmt.Printf("ipv6: %s\n", ipv6)
 	fmt.Printf("ttl : %d\n", ttl)
 	fmt.Printf("log : %t\n", logflag)
+	fmt.Printf("port: %s\n", port)
 	fmt.Printf("conf: %s\n", conf)
 	fmt.Println("")
 	if _, err := os.Stat(conf); err == nil {
@@ -46,7 +48,7 @@ func main() {
 			scanner := bufio.NewScanner(file)
 			for scanner.Scan() {
 				line := scanner.Text()
-				if ! strings.HasPrefix(line, "#") {
+				if !strings.HasPrefix(line, "#") {
 					fields := strings.Fields(line)
 					fmt.Printf("line: %q\n", fields)
 					if len(fields) == 3 {
@@ -60,14 +62,14 @@ func main() {
 	}
 	dns.HandleFunc(".", handleRequest)
 	go func() {
-		srv := &dns.Server{Addr: ":53", Net: "udp"}
+		srv := &dns.Server{Addr: port, Net: "udp"}
 		err := srv.ListenAndServe()
 		if err != nil {
 			log.Fatal("Failed to set udp listener %s\n", err.Error())
 		}
 	}()
 	go func() {
-		srv := &dns.Server{Addr: ":53", Net: "tcp"}
+		srv := &dns.Server{Addr: port, Net: "tcp"}
 		err := srv.ListenAndServe()
 		if err != nil {
 			log.Fatal("Failed to set tcp listener %s\n", err.Error())
