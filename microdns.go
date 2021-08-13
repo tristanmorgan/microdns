@@ -75,12 +75,16 @@ func main() {
 			log.Fatal("Failed to set tcp listener %s\n", err.Error())
 		}
 	}()
-	sig := make(chan os.Signal)
-	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	xsig := make(chan os.Signal)
+	signal.Notify(xsig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	hsig := make(chan os.Signal)
+	signal.Notify(hsig, syscall.SIGHUP)
 	for {
 		select {
-		case s := <-sig:
+		case s := <-xsig:
 			log.Fatalf("Signal (%d) received, stopping\n", s)
+		case s := <-hsig:
+			log.Printf("Signal (%d) received, continue\n", s)
 		}
 	}
 }
