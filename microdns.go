@@ -111,6 +111,11 @@ func handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 		rr1.A = net.ParseIP(ipv4)
 		rr2.AAAA = net.ParseIP(ipv6)
 	}
-	m.Answer = []dns.RR{rr1, rr2}
+
+	if dns.TypeA == r.Question[0].Qtype {
+		m.Answer = []dns.RR{rr1}
+	} else {
+		m.Answer = []dns.RR{rr2}
+	}
 	w.WriteMsg(m)
 }
