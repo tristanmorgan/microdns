@@ -13,7 +13,6 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 )
 
 var ipv4, ipv6, conf, port string
@@ -82,9 +81,9 @@ func main() {
 	for {
 		select {
 		case s := <-xsig:
-			log.Fatalf("Signal (%d) received, stopping\n", s)
+			log.Fatalf("\tSignal (%d) received, stopping\n", s)
 		case s := <-hsig:
-			log.Printf("Signal (%d) received, continue\n", s)
+			log.Printf("\tSignal (%d) received, continue\n", s)
 		}
 	}
 }
@@ -92,10 +91,8 @@ func main() {
 func handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 	domain := r.Question[0].Name
 	if logflag {
-		t := time.Now()
 		ip, _, _ := net.SplitHostPort(w.RemoteAddr().String())
-		fmt.Printf("%d-%02d-%02d_%02d:%02d:%02d\t%s\t%s\n", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), ip, domain)
-		// TODO: log to file
+		log.Printf("\t%s\t%s\n", ip, domain)
 	}
 	m := new(dns.Msg)
 	m.SetReply(r)
